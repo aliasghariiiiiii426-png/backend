@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from .db import models, database
-from .routers import stores, products, scraper_progress
+from app.db import models, database
+from app.routers import stores, products, scraper_progress
 
 # create tables
 models.Base.metadata.create_all(bind=database.engine)
