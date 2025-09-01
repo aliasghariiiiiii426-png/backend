@@ -1,18 +1,16 @@
 #!/bin/sh
 set -e
 
-echo "Waiting for Postgres..."
-until pg_isready -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -d "$POSTGRES_DB"; do
+echo "POSTGRES_USER=$POSTGRES_USER"
+echo "POSTGRES_DB=$POSTGRES_DB"
+echo "POSTGRES_HOST=$POSTGRES_HOST"
+
+
+# Wait for Postgres to be ready
+echo "Waiting for Postgres at $POSTGRES_HOST..."
+until pg_isready -h "$POSTGRES_HOST" -U "$POSTGRES_USER"; do
   sleep 2
 done
-echo "Postgres is ready"
 
-# Create database if it doesn't exist
-DB_EXISTS=$(psql -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -tAc "SELECT 1 FROM pg_database WHERE datname='$POSTGRES_DB'")
-if [ "$DB_EXISTS" != "1" ]; then
-  echo "Creating database $POSTGRES_DB..."
-  psql -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -c "CREATE DATABASE $POSTGRES_DB;"
-fi
-
-# Start FastAPI app with Uvicorn
-exec uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+echo "Postgres is up! Starting backend..."
+exec "$@"

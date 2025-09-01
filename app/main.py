@@ -7,6 +7,10 @@ models.Base.metadata.create_all(bind=database.engine)
 
 app = FastAPI(title="Shopify Scraper Backend")
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 # include routers
 app.include_router(stores.router)
 app.include_router(products.router)
