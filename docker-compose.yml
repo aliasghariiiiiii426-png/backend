@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   shopify_postgres:
     image: postgres:15
@@ -9,6 +11,11 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   shopify_backend:
     build: .
@@ -19,8 +26,12 @@ services:
     expose:
       - "8000"
     depends_on:
-      - shopify_postgres
-    command: uvicorn main:app --host 0.0.0.0 --port 8000
+      shopify_postgres:
+        condition: service_healthy
+    command: >
+      sh -c "until pg_isready -h shopify_postgres -U ${POSTGRES_USER} -d ${POSTGRES_DB}; do
+               echo 'Waiting for Postgres...'; sleep 2; done;
+               uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
 
   shopify_nginx:
     image: nginx:alpine
@@ -30,12 +41,13 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
       - ./certbot-webroot:/var/www/certbot
     depends_on:
-      - shopify_backend
+      shopify_backend:
+        condition: service_healthy
 
   shopify_certbot:
     image: certbot/certbot
