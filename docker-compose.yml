@@ -10,7 +10,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  web:
+  shopify_backend:
     build: .
     container_name: shopify_backend
     restart: always
