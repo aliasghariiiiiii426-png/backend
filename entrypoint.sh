@@ -16,5 +16,5 @@ done
 echo "Postgres is up! Starting backend..."
 
 # Start the backend with exec to prevent shell from exiting
-exec uvicorn main:app --host 0.0.0.0 --port 8000
+exec uvicorn app.main:app --host 0.0.0.0 --port 8000
 
