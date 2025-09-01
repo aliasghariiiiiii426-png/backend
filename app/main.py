@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from db import models, database
+from .db import models, database
 from routers import stores, products, scraper_progress
 
 # create tables
