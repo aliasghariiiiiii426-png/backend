@@ -1,5 +1,5 @@
 services:
-  db:
+  shopify_postgres:
     image: postgres:15
     container_name: shopify_postgres
     restart: always
@@ -19,26 +19,24 @@ services:
     expose:
       - "8000"
     depends_on:
-      - db
+      - shopify_postgres
 
-  nginx:
+  shopify_nginx:
     image: nginx:alpine
     container_name: shopify_nginx
     restart: always
     ports:
       - "80:80"
       - "443:443"
-    env_file:
-      - .env
     volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf   # removed :ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
       - ./certbot-webroot:/var/www/certbot
     depends_on:
-      - web
+      - shopify_backend
 
-  certbot:
+  shopify_certbot:
     image: certbot/certbot
     container_name: shopify_certbot
     volumes:
