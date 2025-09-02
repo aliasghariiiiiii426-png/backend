@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 DOMAIN=bazmino.com
@@ -16,12 +16,12 @@ if [ ! -f "$CERT_PATH" ]; then
         -subj "/CN=localhost"
 fi
 
-# Start nginx
+# Start nginx in background
 nginx &
 
 # Auto replace dummy cert every 12h
 while true; do
-    sleep 12h & wait $${!}
+    sleep 12h
     echo "[certbot] Obtaining/renewing real certificate..."
     certbot certonly --webroot -w "$WEBROOT" -d "$DOMAIN" --non-interactive --agree-tos -m you@example.com || true
     nginx -s reload
