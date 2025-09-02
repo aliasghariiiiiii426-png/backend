@@ -1,18 +1,26 @@
+version: "3.9"
+
 name: "Shopify"
+
 networks:
   shopify_backend:
     external: true
-    
+
+volumes:
+  postgres_data:
+  traefik_data:
+
 services:
+
   traefik:
     image: traefik:v3.3
     container_name: traefik
+    restart: always
     hostname: traefik
-    restart: unless-stopped
     command:
-      - "--log.level=INFO"
+      - "--log.level=ERROR"  # reduce logs in prod
       - "--api.dashboard=true"
-      - "--api.insecure=true"
+      - "--api.insecure=false"  # disable insecure dashboard
       - "--providers.docker=true"
       - "--providers.docker.network=shopify_backend"
       - "--providers.docker.exposedbydefault=false"
@@ -27,25 +35,25 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - "traefik_data:/certs"
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - traefik_data:/certs
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - shopify_backend
     labels:
+      # Dashboard (secured via basic auth)
       - "traefik.enable=true"
-      - "traefik.http.middlewares.web-auth.basicauth.users=${web_auth_user}:${web_auth_pass}"
-      - "traefik.http.routers.http-traefik.rule=Host(`traefik.bazmino.com`)"
-      - "traefik.http.routers.http-traefik.entrypoints=web"
       - "traefik.http.routers.traefik.rule=Host(`traefik.bazmino.com`)"
       - "traefik.http.routers.traefik.entrypoints=web-secure"
-      - "traefik.http.routers.traefik.middlewares=web-auth@docker"
       - "traefik.http.routers.traefik.tls=true"
       - "traefik.http.routers.traefik.tls.certresolver=le"
-      - "traefik.http.services.traefik.loadBalancer.server.port=8080"
+      - "traefik.http.routers.traefik.middlewares=web-auth@docker"
+      - "traefik.http.middlewares.web-auth.basicauth.users=${web_auth_user}:${web_auth_pass}"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+
   shopify_postgres:
     image: postgres:15
     container_name: shopify_postgres
-    restart: unless-stopped
+    restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -64,7 +72,7 @@ services:
   shopify_backend:
     build: .
     container_name: shopify_backend
-    restart: unless-stopped
+    restart: always
     env_file:
       - .env
     expose:
@@ -73,15 +81,13 @@ services:
       shopify_postgres:
         condition: service_healthy
     labels:
-         - "traefik.enable=true"
-         - "traefik.docker.network=shopify_backend"
-         - "traefik.http.routers.shopify.entrypoints=web-secure"
-         - "traefik.http.routers.shopify.rule=Host(`bazmino.com`)"
-    #     - "traefik.http.routers.alertmanager.middlewares=web-auth@docker"
-    #     - "traefik.http.middlewares.web-auth.basicauth.users=admin:{SHA}0DPiKuNIrrVmD8IUCuw1hQxNqZc="
-         - "traefik.http.routers.shopify.tls=true"
-         - "traefik.http.routers.shopify.tls.certresolver=le"
-         - "traefik.http.services.shopify.loadbalancer.server.port=8000"
+      - "traefik.enable=true"
+      - "traefik.docker.network=shopify_backend"
+      - "traefik.http.routers.shopify.entrypoints=web-secure"
+      - "traefik.http.routers.shopify.rule=Host(`bazmino.com`)"
+      - "traefik.http.routers.shopify.tls=true"
+      - "traefik.http.routers.shopify.tls.certresolver=le"
+      - "traefik.http.services.shopify.loadbalancer.server.port=8000"
     networks:
       - shopify_backend
     healthcheck:
@@ -90,34 +96,3 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-
-#  shopify_nginx:
-#    build: ./nginx
-#    container_name: shopify_nginx
-#    restart: always
-#    ports:
-#      - "80:80"
-#      - "443:443"
-#    volumes:
-#      - certbot-etc:/etc/letsencrypt
-#      - certbot-var:/var/lib/letsencrypt
-#      - ./certbot-webroot:/var/www/certbot:rw
-#    depends_on:
-#      shopify_backend:
-#        condition: service_healthy
-#
-#  shopify_certbot:
-#    image: certbot/certbot
-#    container_name: shopify_certbot
-#    volumes:
-#      - ./certbot-webroot:/var/www/certbot:rw
-#      - certbot-etc:/etc/letsencrypt
-#      - certbot-var:/var/lib/letsencrypt
-#    entrypoint: >
-#      sh -c "trap exit TERM; while :; do sleep 12h & wait $${!}; certbot renew --webroot -w /var/www/certbot; done"
-volumes:
-  postgres_data:
-  traefik_data:
-
-
-
