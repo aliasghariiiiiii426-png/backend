@@ -19,7 +19,7 @@ services:
       start_period: 10s
 
   shopify_backend:
-    build: ./backend
+    build: .
     container_name: shopify_backend
     restart: always
     env_file:
