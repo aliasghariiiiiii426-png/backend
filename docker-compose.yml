@@ -79,8 +79,8 @@ services:
          - "traefik.http.routers.shopify.rule=Host(`bazmino.com`)"
     #     - "traefik.http.routers.alertmanager.middlewares=web-auth@docker"
     #     - "traefik.http.middlewares.web-auth.basicauth.users=admin:{SHA}0DPiKuNIrrVmD8IUCuw1hQxNqZc="
-         - "traefik.http.routers.traefik.tls=true"
-         - "traefik.http.routers.traefik.tls.certresolver=le"
+         - "traefik.http.routers.shopify.tls=true"
+         - "traefik.http.routers.shopify.tls.certresolver=le"
          - "traefik.http.services.shopify.loadbalancer.server.port=8000"
     networks:
       - shopify_backend
