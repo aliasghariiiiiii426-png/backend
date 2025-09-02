@@ -46,7 +46,7 @@ services:
     volumes:
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
-      - ./certbot-webroot:/var/www/certbot:ro
+      - ./certbot-webroot:/var/www/certbot:rw
     depends_on:
       shopify_backend:
         condition: service_healthy
@@ -55,7 +55,7 @@ services:
     image: certbot/certbot
     container_name: shopify_certbot
     volumes:
-      - ./certbot-webroot:/var/www/certbot:ro
+      - ./certbot-webroot:/var/www/certbot:rw
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
     entrypoint: >
