@@ -1,7 +1,7 @@
 #!/bin/sh
 # Wait until SSL certificates exist
 DOMAIN=bazmino.com
-CERT_PATH=/etc/letsencrypt/live/$DOMAIN/fullchain.pem
+CERT_PATH=/etc/letsencrypt/live/bazmino.com/fullchain.pem
 
 # Generate a dummy certificate if missing (first start)
 if [ ! -f "$CERT_PATH" ]; then
