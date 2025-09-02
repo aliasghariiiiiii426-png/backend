@@ -1,5 +1,8 @@
-version: "3.9"
-
+name: "Shopify"
+networks:
+  shopify_backend:
+    external: true
+    
 services:
   traefik:
     image: traefik:v3.3
@@ -11,7 +14,7 @@ services:
       - "--api.dashboard=true"
       - "--api.insecure=true"
       - "--providers.docker=true"
-      - "--providers.docker.network=shopify_backend_default"
+      - "--providers.docker.network=shopify_backend"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.web.http.redirections.entryPoint.to=web-secure"
@@ -27,7 +30,7 @@ services:
       - "traefik_data:/certs"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     networks:
-      - shopify_backend_default
+      - shopify_backend
     labels:
       - "traefik.enable=true"
       - "traefik.http.middlewares.web-auth.basicauth.users=${web_auth_user}:${web_auth_pass}"
@@ -49,6 +52,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - shopify_backend
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 10s
@@ -69,12 +74,14 @@ services:
         condition: service_healthy
     labels:
          - "traefik.enable=true"
-         - "traefik.docker.network=shopify_backend_default"
+         - "traefik.docker.network=shopify_backend"
          - "traefik.http.routers.shopify.entrypoints=web-secure"
          - "traefik.http.routers.shopify.rule=Host(`bazmino.com`)"
     #     - "traefik.http.routers.alertmanager.middlewares=web-auth@docker"
     #     - "traefik.http.middlewares.web-auth.basicauth.users=admin:{SHA}0DPiKuNIrrVmD8IUCuw1hQxNqZc="
          - "traefik.http.services.shopify.loadbalancer.server.port=8000"
+    networks:
+      - shopify_backend
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
       interval: 10s
@@ -111,3 +118,6 @@ volumes:
   certbot-etc:
   certbot-var:
   certbot-webroot:
+
+
+
