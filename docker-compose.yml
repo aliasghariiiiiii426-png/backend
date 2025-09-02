@@ -51,6 +51,7 @@ services:
     depends_on:
       shopify_backend:
         condition: service_healthy
+    entrypoint: /bin/sh -c "/entrypoint.sh"
 
   shopify_certbot:
     image: certbot/certbot
