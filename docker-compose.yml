@@ -38,6 +38,8 @@ services:
 
   shopify_nginx:
     build: ./nginx
+    container_name: shopify_nginx
+    restart: always
     ports:
       - "80:80"
       - "443:443"
@@ -46,7 +48,8 @@ services:
       - certbot-var:/var/lib/letsencrypt
       - ./certbot-webroot:/var/www/certbot
     depends_on:
-      - shopify_backend
+      shopify_backend:
+        condition: service_healthy
 
   shopify_certbot:
     image: certbot/certbot
